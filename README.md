@@ -2,8 +2,6 @@
 
 在Home Assistant里使用的网易云音乐插件
 
-## 使用 - [插件图片预览](https://github.com/shaonianzhentan/image/blob/main/ha_cloud_music/README.md)
-
 > **指定ID播放**
 
 - 播放网易云音乐歌单 `cloudmusic://163/playlist?id=25724904`
