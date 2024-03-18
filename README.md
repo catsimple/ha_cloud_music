@@ -27,7 +27,7 @@
 > **登录后播放**
 - [x] 每日推荐 `cloudmusic://163/my/daily`
 - [x] 我喜欢的音乐 `cloudmusic://163/my/ilike`
-- [x] 私人FM `cloudmusic://163/my/personal_fm`
+- [x] 私人FM `cloudmusic://163/my/play_personal_fm`
 
 ## 关联项目
 
