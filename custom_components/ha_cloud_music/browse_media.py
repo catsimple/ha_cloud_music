@@ -87,6 +87,7 @@ class CloudMusicRouter():
 
     my_login = f'{cloudmusic_protocol}my/login'
     my_daily = f'{cloudmusic_protocol}my/daily'
+    my_personal_fm = f'{cloudmusic_protocol}my/personal_fm'
     my_ilike = f'{cloudmusic_protocol}my/ilike'
     my_recommend_resource = f'{cloudmusic_protocol}my/recommend_resource'
     my_cloud = f'{cloudmusic_protocol}my/cloud'
@@ -162,6 +163,11 @@ async def async_browse_media(media_player, media_content_type, media_content_id)
                     'path': CloudMusicRouter.my_daily,
                     'type': MEDIA_TYPE_MUSIC
                 },{
+                    'title': '私人FM',
+                    'path': CloudMusicRouter.my_personal_fm,
+                    'type': MEDIA_TYPE_MUSIC,
+                    'thumbnail': 'http://p3.music.126.net/BoI0il2UdS2we2aNTOBNFA==/109951166867901710.jpg'
+                },{
                     'title': '每日推荐歌单',
                     'path': CloudMusicRouter.my_recommend_resource,
                     'type': MEDIA_TYPE_ALBUM
@@ -204,7 +210,7 @@ async def async_browse_media(media_player, media_content_type, media_content_id)
                 'title': '二维码登录',
                 'path': CloudMusicRouter.my_login + '?action=menu',
                 'type': MEDIA_TYPE_CHANNEL,
-                'thumbnail': 'https://p1.music.126.net/kMuXXbwHbduHpLYDmHXrlA==/109951168152833223.jpg'
+                'thumbnail': 'https://is1-ssl.mzstatic.com/image/thumb/Purple122/v4/dc/3b/84/dc3b84b6-fc41-b44a-97b5-d0f622fefff0/163Music.png/460x0w.png'
             }
         ])
 
@@ -345,6 +351,32 @@ async def async_browse_media(media_player, media_content_type, media_content_id)
             children=[],
         )
         playlist = await cloud_music.async_get_dailySongs()
+        for index, music_info in enumerate(playlist):
+            library_info.children.append(
+                BrowseMedia(
+                    title=music_info.song,
+                    media_class=MEDIA_CLASS_MUSIC,
+                    media_content_type=MEDIA_TYPE_PLAYLIST,
+                    media_content_id=f"{media_content_id}&index={index}",
+                    can_play=True,
+                    can_expand=False,
+                    thumbnail=music_info.thumbnail
+                )
+            )
+        return library_info
+    if media_content_id.startswith(CloudMusicRouter.my_personal_fm):
+        # 私人FM
+        library_info = BrowseMedia(
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id=media_content_id,
+            media_content_type=MEDIA_TYPE_PLAYLIST,
+            title=title,
+            can_play=True,
+            can_expand=False,
+            children=[],
+        )
+        playlist = await cloud_music.async_get_personal_fm()
+        media_player._personal_fm_playlist = playlist
         for index, music_info in enumerate(playlist):
             library_info.children.append(
                 BrowseMedia(
@@ -762,6 +794,8 @@ async def async_play_media(media_player, cloud_music, media_content_id):
         playlist = await cloud_music.async_get_playlist(id)
     elif media_content_id.startswith(CloudMusicRouter.my_daily):
         playlist = await cloud_music.async_get_dailySongs()
+    elif media_content_id.startswith(CloudMusicRouter.my_personal_fm):
+        playlist = media_player._personal_fm_playlist
     elif media_content_id.startswith(CloudMusicRouter.my_ilike):
         playlist = await cloud_music.async_get_ilinkSongs()
     elif media_content_id.startswith(CloudMusicRouter.my_cloud):

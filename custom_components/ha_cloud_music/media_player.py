@@ -32,11 +32,11 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_TVSHOW,
 )
 from homeassistant.const import (
-    CONF_TOKEN, 
+    CONF_TOKEN,
     CONF_URL,
     CONF_NAME,
-    STATE_OFF, 
-    STATE_ON, 
+    STATE_OFF,
+    STATE_ON,
     STATE_PLAYING,
     STATE_PAUSED,
     STATE_IDLE,
@@ -98,6 +98,8 @@ class CloudMusicMediaPlayer(MediaPlayerEntity):
         self._attr_volume_level = 1
         self._attr_repeat = 'all'
         self._attr_shuffle = False
+        # 修复私人FM
+        self._personal_fm_playlist = None
 
         self.cloud_music = hass.data['cloud_music']
         self.before_state = None
@@ -187,7 +189,7 @@ class CloudMusicMediaPlayer(MediaPlayerEntity):
     async def async_play_media(self, media_type, media_id, **kwargs):
 
         self._attr_state = STATE_PAUSED
-        
+
         media_content_id = media_id
         result = await self.cloud_music.async_play_media(self, self.cloud_music, media_id)
         if result is not None:

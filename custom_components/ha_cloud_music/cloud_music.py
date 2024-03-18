@@ -1,4 +1,4 @@
-import uuid, time, logging, os, hashlib, aiohttp, base64
+import uuid, time, logging, os, hashlib, aiohttp, base64, asyncio
 from urllib.parse import quote
 from homeassistant.helpers.network import get_url
 from .http_api import http_get, http_cookie
@@ -268,6 +268,43 @@ class CloudMusic():
             return music_info
 
         return list(map(format_playlist, res['data']['dailySongs']))
+
+    # 获取私人FM
+    async def async_get_personal_fm(self):
+        async def fetch_songs(timestamp):
+            res = await self.netease_cloud_music(f'/personal_fm?timestamp={timestamp}')
+            if res['code'] == 200:
+                return res['data']
+            else:
+                return []
+
+        songs = []
+        for i in range(0, 30, 2):  # 每次2个，达到30次时停止，也就是执行15次
+            timestamps = [int(time.time() * 1000) + i * 1000 for _ in range(2)]  # 生成 2 个时间戳
+            tasks = [fetch_songs(timestamp) for timestamp in timestamps]
+            results = await asyncio.gather(*tasks)  # 并发
+            for result in results:
+                songs.extend(result)
+        # 歌单去重
+        seen_ids = set()
+        for i in range(len(songs) - 1, -1, -1):  # Iterate in reverse order
+            if songs[i]['id'] in seen_ids:
+                songs.pop(i)  # Remove duplicate song
+            else:
+                seen_ids.add(songs[i]['id'])
+
+        def format_playlist(item):
+            id = item['id']
+            song = item['name']
+            singer = item['artists'][0]['name']
+            album = item['album']['name']
+            duration = item['duration']
+            url = self.get_play_url(id, song, singer, MusicSource.PLAYLIST.value)
+            picUrl = item['album'].get('picUrl', 'https://p2.music.126.net/fL9ORyu0e777lppGU3D89A==/109951167206009876.jpg')
+            music_info = MusicInfo(id, song, singer, album, duration, url, picUrl, MusicSource.PLAYLIST.value)
+            return music_info
+
+        return list(map(format_playlist, songs))
 
     # 获取我喜欢的音乐
     async def async_get_ilinkSongs(self):
