@@ -2,32 +2,6 @@
 
 在Home Assistant里使用的网易云音乐插件
 
-[![hacs_badge](https://img.shields.io/badge/Home-Assistant-%23049cdb)](https://www.home-assistant.io/)
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
-![visit](https://visitor-badge.laobi.icu/badge?page_id=shaonianzhentan.ha_cloud_music&left_text=visit)
-
----
-## 历史旧版本项目，请点击链接访问安装
-https://github.com/shaonianzhentan/cloud_music
-
----
-
-## 安装
-
-安装完成重启HA，刷新一下页面，在集成里搜索`云音乐`
-
-[![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=ha_cloud_music)
-
-> 接口说明
-
-接口服务是开源免费的，但需要自己进行部署，然后持续进行更新升级，如果遇到接口相关的问题，请去`NeteaseCloudMusicApi`项目中查找问题
-
-https://github.com/Binaryify/NeteaseCloudMusicApi
-
-不想动手不想操心，也可以付费使用由我部署维护的接口服务（每年30）
-
-**注意：关联媒体播放器调整为在集成选项中选择**
-
 ## 使用 - [插件图片预览](https://github.com/shaonianzhentan/image/blob/main/ha_cloud_music/README.md)
 
 > **指定ID播放**
@@ -53,6 +27,7 @@ https://github.com/Binaryify/NeteaseCloudMusicApi
 > **登录后播放**
 - [x] 每日推荐 `cloudmusic://163/my/daily`
 - [x] 我喜欢的音乐 `cloudmusic://163/my/ilike`
+- [x] 私人FM `cloudmusic://163/my/personal_fm`
 
 ## 关联项目
 
