@@ -25,8 +25,9 @@
 > **登录后播放**
 - [x] 每日推荐 `cloudmusic://163/my/daily`
 - [x] 我喜欢的音乐 `cloudmusic://163/my/ilike`
-- [x] 私人FM `cloudmusic://163/my/play_personal_fm`
-
+- [x] 私人FM(旧版接口) `cloudmusic://163/my/play_old_personal_fm` 
+- [x] 私人FM(新版接口) `cloudmusic://163/my/play_new_personal_fm`私人FM模式（新版接口）`mode`可选参数如下`DEFAULT, FAMILIAR, EXPLORE, SCENE_RCMD` 当`mode`为`SCENE_RCMD`时`submode`可选参数如下`EXERCISE, FOCUS, NIGHT_EMO`  如`cloudmusic://163/my/play_new_personal_fm?mode=SCENE_RCMD&submode=FOCUS` 
+      
 ## 关联项目
 
 - https://github.com/shaonianzhentan/cloud_music_mpd
