@@ -88,6 +88,11 @@ class CloudMusicRouter():
     my_login = f'{cloudmusic_protocol}my/login'
     my_daily = f'{cloudmusic_protocol}my/daily'
     my_personal_fm = f'{cloudmusic_protocol}my/personal_fm'
+    my_personal_fm_play = f'{cloudmusic_protocol}my/play_personal_fm'
+    my_old_personal_fm = f'{cloudmusic_protocol}my/old_personal_fm'
+    my_new_personal_fm = f'{cloudmusic_protocol}my/new_personal_fm'
+    my_old_personal_fm_play = f'{cloudmusic_protocol}my/play_old_personal_fm'
+    my_new_personal_fm_play = f'{cloudmusic_protocol}my/play_new_personal_fm'
     my_ilike = f'{cloudmusic_protocol}my/ilike'
     my_recommend_resource = f'{cloudmusic_protocol}my/recommend_resource'
     my_cloud = f'{cloudmusic_protocol}my/cloud'
@@ -344,7 +349,7 @@ async def async_browse_media(media_player, media_content_type, media_content_id)
         library_info = BrowseMedia(
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id=media_content_id,
-            media_content_type=MEDIA_TYPE_PLAYLIST,
+            media_content_type=MEDIA_CLASS_TRACK,
             title=title,
             can_play=True,
             can_expand=False,
@@ -365,9 +370,60 @@ async def async_browse_media(media_player, media_content_type, media_content_id)
             )
         return library_info
     if media_content_id.startswith(CloudMusicRouter.my_personal_fm):
-        # 私人FM
+        # 私人FM 主目录
         library_info = BrowseMedia(
             media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id=media_content_id,
+            media_content_type=MEDIA_TYPE_PLAYLIST,
+            title="私人FM",
+            can_play=False,
+            can_expand=True,
+            children=[],
+        )
+        modes = {
+            "旧": CloudMusicRouter.my_old_personal_fm,
+            "默认": f"{CloudMusicRouter.my_new_personal_fm}?mode=DEFAULT",
+            "熟悉": f"{CloudMusicRouter.my_new_personal_fm}?mode=FAMILIAR",
+            "探索": f"{CloudMusicRouter.my_new_personal_fm}?mode=EXPLORE",
+            "场景": {
+                "锻炼": f"{CloudMusicRouter.my_new_personal_fm}?mode=SCENE_RCMD&submode=EXERCISE",
+                "专注": f"{CloudMusicRouter.my_new_personal_fm}?mode=SCENE_RCMD&submode=FOCUS",
+                "夜晚EMO": f"{CloudMusicRouter.my_new_personal_fm}?mode=SCENE_RCMD&submode=NIGHT_EMO",
+            },
+        }
+        for title, path in modes.items():
+            if isinstance(path, dict):
+                for sub_title, sub_path in path.items():
+                    media_content_id = f"{CloudMusicRouter.my_new_personal_fm}?title=私人FM（{quote(sub_title)}）"
+                    browse_media_object = BrowseMedia(
+                        title=f"私人FM（{sub_title}）",
+                        media_class=MEDIA_TYPE_PLAYLIST,
+                        media_content_type=MEDIA_TYPE_PLAYLIST,
+                        media_content_id=media_content_id,
+                        can_play=False,
+                        can_expand=True,
+                    )
+                    library_info.children.append(browse_media_object)
+            else:
+                if path == CloudMusicRouter.my_old_personal_fm:
+                    media_content_id = f"{CloudMusicRouter.my_old_personal_fm}?title=私人FM（{quote(title)}）"
+                else:
+                    media_content_id = f"{CloudMusicRouter.my_new_personal_fm}?title=私人FM（{quote(title)}）"
+                browse_media_object = BrowseMedia(
+                    title=f"私人FM（{title}）",
+                    media_class=MEDIA_TYPE_PLAYLIST,
+                    media_content_type=MEDIA_TYPE_PLAYLIST,
+                    media_content_id=media_content_id,
+                    can_play=False,
+                    can_expand=True,
+                )
+                library_info.children.append(browse_media_object)
+
+        return library_info
+    if media_content_id.startswith(CloudMusicRouter.my_old_personal_fm):
+        # 私人FM 旧版
+        library_info = BrowseMedia(
+            media_class=MEDIA_TYPE_PLAYLIST,
             media_content_id=media_content_id,
             media_content_type=MEDIA_TYPE_PLAYLIST,
             title=title,
@@ -375,7 +431,37 @@ async def async_browse_media(media_player, media_content_type, media_content_id)
             can_expand=False,
             children=[],
         )
-        playlist = await cloud_music.async_get_personal_fm()
+        playlist = await cloud_music.async_get_personal_fm_old()
+        media_player._personal_fm_playlist = playlist
+        for index, music_info in enumerate(playlist):
+            library_info.children.append(
+                BrowseMedia(
+                    title=music_info.song,
+                    media_class=MEDIA_CLASS_MUSIC,
+                    media_content_type=MEDIA_TYPE_PLAYLIST,
+                    media_content_id=f"{media_content_id}&index={index}",
+                    can_play=True,
+                    can_expand=False,
+                    thumbnail=music_info.thumbnail
+                )
+            )
+        return library_info
+    if media_content_id.startswith(CloudMusicRouter.my_new_personal_fm):
+        # 私人FM 新版
+        library_info = BrowseMedia(
+            media_class=MEDIA_TYPE_PLAYLIST,
+            media_content_id=media_content_id,
+            media_content_type=MEDIA_TYPE_PLAYLIST,
+            title=title,
+            can_play=True,
+            can_expand=False,
+            children=[],
+        )
+        url = urlparse(media_content_id)
+        query = parse_qs(url.query)
+        mode = query.get('mode', ['DEFAULT'])[0]
+        submode = query.get('submode', [None])[0]
+        playlist = await cloud_music.async_get_personal_fm_new(mode, submode)
         media_player._personal_fm_playlist = playlist
         for index, music_info in enumerate(playlist):
             library_info.children.append(
@@ -794,8 +880,6 @@ async def async_play_media(media_player, cloud_music, media_content_id):
         playlist = await cloud_music.async_get_playlist(id)
     elif media_content_id.startswith(CloudMusicRouter.my_daily):
         playlist = await cloud_music.async_get_dailySongs()
-    elif media_content_id.startswith(CloudMusicRouter.my_personal_fm):
-        playlist = media_player._personal_fm_playlist
     elif media_content_id.startswith(CloudMusicRouter.my_ilike):
         playlist = await cloud_music.async_get_ilinkSongs()
     elif media_content_id.startswith(CloudMusicRouter.my_cloud):
@@ -830,6 +914,17 @@ async def async_play_media(media_player, cloud_music, media_content_id):
         playlist = await cloud_music.async_play_radio(keywords)
     elif media_content_id.startswith(CloudMusicRouter.play_singer):
         playlist = await cloud_music.async_play_singer(keywords)
+        #播放私人FM
+    elif media_content_id.startswith(CloudMusicRouter.my_personal_fm):
+        playlist = media_player._personal_fm_playlist
+    elif media_content_id.startswith(CloudMusicRouter.my_old_personal_fm):
+        playlist = media_player._personal_fm_playlist
+    elif media_content_id.startswith(CloudMusicRouter.my_new_personal_fm):
+        playlist = media_player._personal_fm_playlist
+    elif media_content_id.startswith(CloudMusicRouter.my_old_personal_fm_play):
+        playlist = await cloud_music.async_get_personal_fm_old()
+    elif media_content_id.startswith(CloudMusicRouter.my_new_personal_fm_play):
+        playlist = await cloud_music.async_get_personal_fm_new()
 
         ##播放指定URL
     elif media_content_id.startswith(CloudMusicRouter.play_url):
@@ -842,13 +937,10 @@ async def async_play_media(media_player, cloud_music, media_content_id):
         duration = '1000000000'
         url = query.get('url')
         picUrl = query.get('picurl')  # 提取缩略图URL
-
-
         if url is not None:
             media_player.playlist = [ MusicInfo(id, song, singer, album, duration, url, picUrl, MusicSource.URL.value) ]
             media_player.playindex = 0
             return 'playlist'
-
     if playlist is not None:
         media_player.playindex = playindex
         media_player.playlist = playlist
