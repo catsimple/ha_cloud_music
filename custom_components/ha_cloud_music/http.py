@@ -1,10 +1,13 @@
 import base64
 import requests
+import logging
 from urllib.parse import parse_qsl, quote
 from homeassistant.components.http import HomeAssistantView
 from aiohttp import web
 from .models.music_info import MusicSource
 from .manifest import manifest
+
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = manifest.domain
 
@@ -53,11 +56,15 @@ class HttpView(HomeAssistantView):
             if url is not None:
                 # 收费音乐
                 if fee == 1:
-                    url = await hass.async_add_executor_job(self.getVipMusic, id)
+                    url = await hass.async_add_executor_job(self.getVipMusicwithUNM, song, singer)
+                    # If getVipMusicwithUNM fails, fall back to getVipMusic
                     if url is None or url == '':
-                        result = await cloud_music.async_music_source(song, singer)
-                        if result is not None:
-                            url = result.url
+                        url = await hass.async_add_executor_job(self.getVipMusic, id)
+                    # If both methods fail, try the alternative source
+                        if url is None or url == '':
+                            result = await cloud_music.async_music_source(song, singer)
+                            if result is not None:
+                                url = result.url
 
                 play_url = url
             else:
@@ -66,12 +73,17 @@ class HttpView(HomeAssistantView):
                 if url is not None:
                     play_url = url
                 else:
-                    result = await cloud_music.async_music_source(song, singer)
-                    if result is not None:
-                        play_url = result.url
+                    url = await hass.async_add_executor_job(self.getVipMusicwithUNM, song, singer)
+                    if url is not None:
+                        play_url = url
+                    else:
+                        result = await cloud_music.async_music_source(song, singer)
+                        if result is not None:
+                            play_url = result.url
+
 
         self.play_key = play_key
-        self.play_url = play_url     
+        self.play_url = play_url
         # 重定向到可播放链接
         return web.HTTPFound(play_url)
 
@@ -87,3 +99,14 @@ class HttpView(HomeAssistantView):
             return data.get('url')
         except Exception as ex:
             pass
+    # UNM BRIDGE API HERE
+    def getVipMusicwithUNM(self, song, singer):
+        try:
+            keyword = f"{song} - {singer}"
+            url = f"http://192.168.10.1:8791/kuwo/check?%7B%22keyword%22%3A%22{keyword}%22%7D"
+            response = requests.get(url)
+            playback_url = response.text.strip()
+            return playback_url
+        except Exception as ex:
+            pass
+
