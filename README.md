@@ -15,6 +15,7 @@
 > **搜索播放**
 
 - [x] 音乐搜索播放 `cloudmusic://play/song?kv=关键词`
+      使用'歌名-歌手'的格式搜索会获得更匹配的搜索结果(使用了UNM的情况下)
 - [x] 歌手搜索播放 `cloudmusic://play/singer?kv=关键词`
 - [x] 歌单搜索播放 `cloudmusic://play/list?kv=关键词`
 - [x] 电台搜索播放 `cloudmusic://play/radio?kv=关键词`
