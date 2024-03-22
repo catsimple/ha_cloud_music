@@ -475,7 +475,9 @@ class CloudMusic():
                 singer_origin = ""
                 singer_bak = ""
                 if "-" in name:
-                    song, singer = name.split("-", 1).strip()
+                    song, singer = name.split("-", 1)
+                    song = song.strip()
+                    singer = singer.strip()
                 if any(keyword in song for keyword in ["cover", "翻自", "翻唱", "原唱"]):
                     for keyword in ["cover", "翻自", "翻唱", "原唱"]:
                         if keyword in song:
