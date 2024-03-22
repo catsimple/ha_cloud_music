@@ -1,13 +1,10 @@
 import base64
 import requests
-import logging
 from urllib.parse import parse_qsl, quote
 from homeassistant.components.http import HomeAssistantView
 from aiohttp import web
 from .models.music_info import MusicSource
 from .manifest import manifest
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = manifest.domain
 
@@ -99,6 +96,7 @@ class HttpView(HomeAssistantView):
             return data.get('url')
         except Exception as ex:
             pass
+
     # UNM BRIDGE API HERE
     def getVipMusicwithUNM(self, song, singer):
         try:

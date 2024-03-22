@@ -2,6 +2,7 @@ import uuid, time, logging, os, hashlib, aiohttp, base64, asyncio
 from urllib.parse import quote
 from homeassistant.helpers.network import get_url
 from .http_api import http_get, http_cookie
+from .http import HttpView
 from .models.music_info import MusicInfo, MusicSource
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.util.json import load_json, save_json
@@ -19,14 +20,12 @@ from .music_parser import get_music
 def md5(data):
     return hashlib.md5(data.encode('utf-8')).hexdigest()
 
-_LOGGER = logging.getLogger(__name__)
-
 class CloudMusic():
 
     def __init__(self, hass, url) -> None:
         self.hass = hass
         self.api_url = url.strip('/')
-
+        self.http_view = HttpView()
         # 媒体资源
         self.async_browse_media = async_browse_media
         self.async_play_media = async_play_media
@@ -450,7 +449,6 @@ class CloudMusic():
 
     # 搜索音乐播放
     async def async_play_song(self, name):
-
         if '周杰伦' in name:
             result = await self.async_music_source(name)
             if result is not None:
@@ -473,8 +471,31 @@ class CloudMusic():
                 picUrl = self.netease_image_url(al.get('picUrl'))
                 duration = item.get('dt')
 
-                url = self.get_play_url(id, song, singer, MusicSource.PLAYLIST.value)
-
+                #处理歌名，在获取外部源时更精准
+                singer_origin = ""
+                singer_bak = ""
+                if "-" in name:
+                    song, singer = name.split("-", 1).strip()
+                if any(keyword in song for keyword in ["cover", "翻自", "翻唱", "原唱"]):
+                    for keyword in ["cover", "翻自", "翻唱", "原唱"]:
+                        if keyword in song:
+                            singer_origin = song.split(keyword, 1)[1].strip()
+                            singer_origin = singer_origin.replace(":", "").replace("：", "").replace("-", "").replace("(", "").replace(")", "").replace("（", "").replace("）", "")
+                            break
+                ##优先使用外部源匹配歌曲播放URL，避免匹配到无版权翻唱歌曲
+                if singer_origin != "":
+                    singer_bak = singer
+                    singer = singer_origin
+                    song_bak = song
+                    song = name
+                    url = await self.hass.async_add_executor_job(self.http_view.getVipMusicwithUNM, song, singer)
+                else:
+                    url = await self.hass.async_add_executor_job(self.http_view.getVipMusicwithUNM, song, singer)
+                if url is None or url == '':
+                    if singer_bak != "":
+                        singer = singer_bak
+                        song = song_bak
+                    url = self.get_play_url(id, song, singer, MusicSource.PLAYLIST.value)
                 music_info = MusicInfo(id, song, singer, album, duration, url, picUrl, MusicSource.URL.value)
                 return [ music_info ]
 
