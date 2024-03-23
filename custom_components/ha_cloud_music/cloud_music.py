@@ -348,11 +348,19 @@ class CloudMusic():
             return music_info
 
         return list(map(format_playlist, songs))
-    async def async_dislike_fm(self, media_player):
+
+    # 添加到FM回收站
+    async def async_dislike_fm(self):
         dislike_id = self.nowplaying_id
         if dislike_id is not None:
             res = await self.netease_cloud_music(f'/fm_trash?id={dislike_id}')
             await media_player.async_media_next_track()
+
+    # 添加到我喜欢
+    async def async_like_fm(self):
+        like_id = self.nowplaying_id
+        if like_id is not None:
+            res = await self.netease_cloud_music(f'/like?id={like_id}')
 
     # 获取我喜欢的音乐
     async def async_get_ilinkSongs(self):

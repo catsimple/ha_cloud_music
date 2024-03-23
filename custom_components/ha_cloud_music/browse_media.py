@@ -94,6 +94,7 @@ class CloudMusicRouter():
     my_old_personal_fm_play = f'{cloudmusic_protocol}my/play_old_personal_fm'
     my_new_personal_fm_play = f'{cloudmusic_protocol}my/play_new_personal_fm'
     my_dislike_fm = f'{cloudmusic_protocol}my/dislike_fm'
+    my_like_fm = f'{cloudmusic_protocol}my/like_fm'
     my_ilike = f'{cloudmusic_protocol}my/ilike'
     my_recommend_resource = f'{cloudmusic_protocol}my/recommend_resource'
     my_cloud = f'{cloudmusic_protocol}my/cloud'
@@ -927,8 +928,9 @@ async def async_play_media(media_player, cloud_music, media_content_id):
     elif media_content_id.startswith(CloudMusicRouter.my_new_personal_fm_play):
         playlist = await cloud_music.async_get_personal_fm_new()
     elif media_content_id.startswith(CloudMusicRouter.my_dislike_fm):
-        await cloud_music.async_dislike_fm(media_player)
-
+        await cloud_music.async_dislike_fm()
+    elif media_content_id.startswith(CloudMusicRouter.my_like_fm):
+        await cloud_music.async_like_fm()
 
         ##播放指定URL
     elif media_content_id.startswith(CloudMusicRouter.play_url):
