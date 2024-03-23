@@ -28,6 +28,9 @@
 - [x] 我喜欢的音乐 `cloudmusic://163/my/ilike`
 - [x] 私人FM(旧版接口) `cloudmusic://163/my/play_old_personal_fm` 
 - [x] 私人FM(新版接口) `cloudmusic://163/my/play_new_personal_fm`私人FM模式（新版接口）`mode`可选参数如下`DEFAULT, FAMILIAR, EXPLORE, SCENE_RCMD` 当`mode`为`SCENE_RCMD`时`submode`可选参数如下`EXERCISE, FOCUS, NIGHT_EMO`  如`cloudmusic://163/my/play_new_personal_fm?mode=SCENE_RCMD&submode=FOCUS` 
+
+> **对歌曲操作**
+- [x] 不喜欢 `cloudmusic://163/my/dislike_fm` 对正在播放的私人FM（私人漫游）中的歌曲丢进回收站（不喜欢）
       
 ## 关联项目
 
