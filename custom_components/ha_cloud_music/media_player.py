@@ -99,7 +99,7 @@ class CloudMusicMediaPlayer(MediaPlayerEntity):
         self._attr_repeat = 'all'
         self._attr_shuffle = False
         # 修复私人FM
-        self._personal_fm_playlist = None
+        self.personal_fm_playlist = None
 
         self.cloud_music = hass.data['cloud_music']
         self.before_state = None
@@ -193,7 +193,10 @@ class CloudMusicMediaPlayer(MediaPlayerEntity):
         self._attr_state = STATE_PAUSED
 
         media_content_id = media_id
+
+
         result = await self.cloud_music.async_play_media(self, self.cloud_music, media_id)
+        self.cloud_music.nowplaying_id = self.playlist[self.playindex].id
         if result is not None:
             if result == 'index':
                 # 播放当前列表指定项

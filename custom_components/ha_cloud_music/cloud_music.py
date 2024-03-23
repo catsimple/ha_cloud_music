@@ -8,6 +8,7 @@ from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.util.json import load_json, save_json
 from http.cookies import SimpleCookie
 
+
 from .browse_media import (
     async_browse_media,
     async_play_media,
@@ -31,6 +32,9 @@ class CloudMusic():
         self.async_play_media = async_play_media
         self.async_media_previous_track = async_media_previous_track
         self.async_media_next_track = async_media_next_track
+
+        # 定义正在播放的ID
+        self.nowplaying_id = None
 
         self.userinfo = {}
         # 读取用户信息
@@ -344,6 +348,11 @@ class CloudMusic():
             return music_info
 
         return list(map(format_playlist, songs))
+    async def async_dislike_fm(self, media_player):
+        dislike_id = self.nowplaying_id
+        if dislike_id is not None:
+            res = await self.netease_cloud_music(f'/fm_trash?id={dislike_id}')
+            await media_player.async_media_next_track()
 
     # 获取我喜欢的音乐
     async def async_get_ilinkSongs(self):
